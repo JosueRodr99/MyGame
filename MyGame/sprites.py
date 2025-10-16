@@ -2,12 +2,25 @@ import pygame
 import math
 import random
 from settings import *
+try:
+    from maze_designer import create_custom_level
+except ImportError:
+    create_custom_level = None
+    
+try:
+    from sprite_loader import sprite_loader
+except ImportError:
+    sprite_loader = None
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.Surface((PLAYER_SIZE, PLAYER_SIZE))
-        self.image.fill(PLAYER_COLOR)
+        # Usar sprite personalizado si está disponible
+        if sprite_loader:
+            self.image = sprite_loader.get_player_sprite()
+        else:
+            self.image = pygame.Surface((PLAYER_SIZE, PLAYER_SIZE))
+            self.image.fill(PLAYER_COLOR)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -48,17 +61,24 @@ class Enemy(pygame.sprite.Sprite):
         self.hunt_mode_speed = ENEMY_SPEED * HUNT_MODE_ENEMY_SPEED_MULTIPLIER
         self.is_boss = False
         
+        # Usar sprite personalizado si está disponible
+        if sprite_loader:
+            self.image = sprite_loader.get_enemy_sprite(enemy_type, False)
+        else:
+            if enemy_type == "circle":
+                self.image = pygame.Surface((ENEMY_CIRCLE_SIZE, ENEMY_CIRCLE_SIZE))
+                self.image.fill(ENEMY_CIRCLE_COLOR)
+            elif enemy_type == "square":
+                self.image = pygame.Surface((ENEMY_SQUARE_SIZE, ENEMY_SQUARE_SIZE))
+                self.image.fill(ENEMY_SQUARE_COLOR)
+            elif enemy_type == "triangle":
+                self.image = pygame.Surface((ENEMY_TRIANGLE_SIZE, ENEMY_TRIANGLE_SIZE))
+                self.image.fill(ENEMY_TRIANGLE_COLOR)
         if enemy_type == "circle":
-            self.image = pygame.Surface((ENEMY_CIRCLE_SIZE, ENEMY_CIRCLE_SIZE))
-            self.image.fill(ENEMY_CIRCLE_COLOR)
             self.color = ENEMY_CIRCLE_COLOR
         elif enemy_type == "square":
-            self.image = pygame.Surface((ENEMY_SQUARE_SIZE, ENEMY_SQUARE_SIZE))
-            self.image.fill(ENEMY_SQUARE_COLOR)
             self.color = ENEMY_SQUARE_COLOR
         elif enemy_type == "triangle":
-            self.image = pygame.Surface((ENEMY_TRIANGLE_SIZE, ENEMY_TRIANGLE_SIZE))
-            self.image.fill(ENEMY_TRIANGLE_COLOR)
             self.color = ENEMY_TRIANGLE_COLOR
             
         self.rect = self.image.get_rect()
@@ -81,19 +101,25 @@ class Enemy(pygame.sprite.Sprite):
         self.speed = BOSS_SPEED
         self.hunt_mode_speed = BOSS_SPEED * HUNT_MODE_ENEMY_SPEED_MULTIPLIER
         
-        # Increase size
+        # Increase size and use boss sprite
         old_center = self.rect.center
-        if self.enemy_type == "circle":
+        if sprite_loader:
+            self.image = sprite_loader.get_enemy_sprite(self.enemy_type, True)
+        else:
             self.image = pygame.Surface((BOSS_SIZE, BOSS_SIZE))
+            if self.enemy_type == "circle":
+                self.image.fill(BOSS_CIRCLE_COLOR)
+            elif self.enemy_type == "square":
+                self.image.fill(BOSS_SQUARE_COLOR)
+            elif self.enemy_type == "triangle":
+                self.image.fill(BOSS_TRIANGLE_COLOR)
+        if self.enemy_type == "circle":
             self.color = BOSS_CIRCLE_COLOR
         elif self.enemy_type == "square":
-            self.image = pygame.Surface((BOSS_SIZE, BOSS_SIZE))
             self.color = BOSS_SQUARE_COLOR
         elif self.enemy_type == "triangle":
-            self.image = pygame.Surface((BOSS_SIZE, BOSS_SIZE))
             self.color = BOSS_TRIANGLE_COLOR
             
-        self.image.fill(self.color)
         self.rect = self.image.get_rect()
         self.rect.center = old_center
         
@@ -150,8 +176,13 @@ class Enemy(pygame.sprite.Sprite):
 class Wall(pygame.sprite.Sprite):
     def __init__(self, x, y, width, height):
         super().__init__()
-        self.image = pygame.Surface((width, height))
-        self.image.fill(GRAY)
+        # Usar sprite personalizado si está disponible
+        if sprite_loader:
+            self.image = sprite_loader.get_wall_sprite()
+            self.image = pygame.transform.scale(self.image, (width, height))
+        else:
+            self.image = pygame.Surface((width, height))
+            self.image.fill(GRAY)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -169,25 +200,19 @@ class Level:
         
     def create_level_layout(self):
         """Create the maze layout for this level"""
-        # Basic maze layout - this would be expanded for each level
-        if self.level_num == 1:
-            self.create_level_1()
-        elif self.level_num == 2:
-            self.create_level_2()
-        elif self.level_num == 3:
-            self.create_boss_level("circle")
-        elif self.level_num == 4:
-            self.create_level_4()
-        elif self.level_num == 5:
-            self.create_level_5()
-        elif self.level_num == 6:
-            self.create_boss_level("square")
-        elif self.level_num == 7:
-            self.create_level_7()
-        elif self.level_num == 8:
-            self.create_level_8()
-        elif self.level_num == 9:
-            self.create_boss_level("triangle")
+        # Use the new custom level designer if available
+        if create_custom_level:
+            self.walls, self.enemies, self.player = create_custom_level(self.level_num)
+        else:
+            # Fallback to original method
+            if self.level_num == 1:
+                self.create_level_1()
+            elif self.level_num == 2:
+                self.create_level_2()
+            elif self.level_num == 3:
+                self.create_boss_level("circle")
+            else:
+                self.create_level_1()  # Default
             
     def create_level_1(self):
         """Create level 1 layout"""

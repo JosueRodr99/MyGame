@@ -4,6 +4,7 @@ import os
 from lobby import Lobby
 from levels import LevelSelection
 from options import Options
+from game_level import GameLevel
 from settings import *
 
 class Game:
@@ -57,8 +58,13 @@ class Game:
                     self.running = False
                 
             elif self.current_state.startswith("game_level_"):
-                # TODO: Implement actual game level
-                self.current_state = "lobby"
+                level_num = int(self.current_state.split("_")[2])
+                game_level = GameLevel(level_num)
+                result = game_level.run()
+                if result == "lobby":
+                    self.current_state = "lobby"
+                elif result == False:
+                    self.running = False
                 
             # Limit FPS
             self.clock.tick(FPS)

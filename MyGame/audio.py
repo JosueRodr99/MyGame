@@ -35,12 +35,12 @@ class AudioManager:
             'enemy_death': 'enemy_death.wav',
             'player_hit': 'player_hit.wav',
             'hunt_mode_start': 'hunt_mode_start.wav',
-            'hunt_mode_end': 'hunt_mode_end.wav',
+            'hunt_mode_end': 'hunt_mode_start.wav',  # Reuse existing sound
             'level_complete': 'level_complete.wav',
-            'game_over': 'game_over.wav',
+            'game_over': 'boss_spawn.wav',  # Reuse existing sound
             'boss_spawn': 'boss_spawn.wav',
-            'power_up': 'power_up.wav',
-            'footstep': 'footstep.wav'
+            'power_up': 'button_click.wav',  # Reuse existing sound
+            'footstep': 'button_click.wav'  # Reuse existing sound
         }
         
         # Load sound effects
